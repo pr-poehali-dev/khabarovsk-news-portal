@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Icon from '@/components/ui/icon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,53 +9,39 @@ import NotificationSubscribe from '@/components/NotificationSubscribe';
 const Index = () => {
   const [activeSection, setActiveSection] = useState('Главная');
   const [showNotificationDialog, setShowNotificationDialog] = useState(false);
+  const [news, setNews] = useState<any[]>([]);
+  const [weather, setWeather] = useState<any>({ temp: 22, condition: 'Солнечно', forecast: [] });
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
 
   const sections = ['Главная', 'Новости', 'События', 'Погода', 'Происшествия'];
 
-  const news = [
-    {
-      id: 1,
-      title: 'Хабаровск готовится к празднованию Дня города',
-      category: 'События',
-      image: '/img/da67e97b-1254-401a-bae7-64a40dbfe1e2.jpg',
-      time: '2 часа назад',
-      excerpt: 'В этом году День города пройдет с особым размахом. Запланированы концерты, фестивали и праздничный салют.',
-      featured: true
-    },
-    {
-      id: 2,
-      title: 'Новый парк открылся в центре города',
-      category: 'Новости',
-      image: '/img/6c937c6b-c878-4380-8a71-733b0ddc2680.jpg',
-      time: '4 часа назад',
-      excerpt: 'Жители уже оценили современную зону отдыха с детскими площадками и велодорожками.',
-      featured: false
-    },
-    {
-      id: 3,
-      title: 'Погода: солнечная неделя ждет хабаровчан',
-      category: 'Погода',
-      image: '/img/f994bb22-48a1-42a6-8ca5-3eda862f7b57.jpg',
-      time: '5 часов назад',
-      excerpt: 'Температура воздуха поднимется до +22°C. Осадков не ожидается.',
-      featured: false
-    },
-    {
-      id: 4,
-      title: 'Реконструкция набережной завершена досрочно',
-      category: 'Новости',
-      image: '/img/da67e97b-1254-401a-bae7-64a40dbfe1e2.jpg',
-      time: '6 часов назад',
-      excerpt: 'Обновленная набережная Амура стала любимым местом прогулок горожан.',
-      featured: false
+  const fetchNews = async () => {
+    try {
+      const response = await fetch('https://functions.poehali.dev/f165c29f-25e8-4e3d-9d86-6442b89e08df');
+      const data = await response.json();
+      
+      setNews(data.news || []);
+      setWeather(data.weather || { temp: 22, condition: 'Солнечно', forecast: [] });
+      setIncidents(data.incidents || []);
+      setLastUpdate(data.lastUpdate);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Ошибка загрузки новостей:', error);
+      setIsLoading(false);
     }
-  ];
+  };
 
-  const incidents = [
-    { id: 1, title: 'ДТП на улице Ленина', time: '1 час назад' },
-    { id: 2, title: 'Отключение электричества в районе', time: '3 часа назад' },
-    { id: 3, title: 'Ремонт дороги на Амурском бульваре', time: '5 часов назад' }
-  ];
+  useEffect(() => {
+    fetchNews();
+    
+    const interval = setInterval(() => {
+      fetchNews();
+    }, 3600000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -81,8 +67,8 @@ const Index = () => {
                 Подписаться
               </Button>
               <div className="text-right">
-                <div className="text-2xl font-bold">+22°C</div>
-                <div className="text-xs text-gray-200">Солнечно</div>
+                <div className="text-2xl font-bold">+{weather.temp}°C</div>
+                <div className="text-xs text-gray-200">{weather.condition}</div>
               </div>
               <Icon name="Sun" size={40} className="text-yellow-300" />
             </div>
@@ -107,9 +93,24 @@ const Index = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            {news.filter(item => item.featured).map((item, index) => (
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-gray-500">Загрузка новостей...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid lg:grid-cols-3 gap-6">
+            {lastUpdate && (
+              <div className="lg:col-span-3 flex items-center justify-center gap-2 text-sm text-gray-500 bg-white rounded-lg p-3 shadow">
+                <Icon name="RefreshCw" size={16} />
+                <span>Обновлено: {new Date(lastUpdate).toLocaleString('ru-RU')}</span>
+                <span className="text-xs text-gray-400">• Следующее обновление через час</span>
+              </div>
+            )}
+            <div className="lg:col-span-2 space-y-6">
+              {news.filter(item => item.featured).map((item, index) => (
               <Card 
                 key={item.id} 
                 className="overflow-hidden hover:shadow-2xl transition-all duration-300 animate-fade-in border-0"
@@ -181,21 +182,15 @@ const Index = () => {
                     <p className="text-sm text-blue-100">Хабаровск</p>
                   </div>
                 </div>
-                <div className="text-5xl font-bold mb-2">+22°C</div>
-                <p className="text-blue-100 mb-4">Солнечно, без осадков</p>
+                <div className="text-5xl font-bold mb-2">+{weather.temp}°C</div>
+                <p className="text-blue-100 mb-4">{weather.condition}</p>
                 <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className="bg-white/10 rounded-lg p-2">
-                    <div className="text-xs text-blue-100">Завтра</div>
-                    <div className="text-lg font-bold">+20°C</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-2">
-                    <div className="text-xs text-blue-100">Ср</div>
-                    <div className="text-lg font-bold">+21°C</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-2">
-                    <div className="text-xs text-blue-100">Чт</div>
-                    <div className="text-lg font-bold">+23°C</div>
-                  </div>
+                  {weather.forecast?.map((day: any, idx: number) => (
+                    <div key={idx} className="bg-white/10 rounded-lg p-2">
+                      <div className="text-xs text-blue-100">{day.day}</div>
+                      <div className="text-lg font-bold">+{day.temp}°C</div>
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -240,8 +235,9 @@ const Index = () => {
                 </ul>
               </CardContent>
             </Card>
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
       <footer className="bg-secondary text-white mt-12 py-8">
