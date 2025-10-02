@@ -3,6 +3,7 @@ import Icon from '@/components/ui/icon';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import VoiceAssistant from '@/components/VoiceAssistant';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('Главная');
@@ -266,6 +267,8 @@ const Index = () => {
           </div>
         </div>
       </footer>
+
+      <VoiceAssistant onSectionChange={setActiveSection} />
     </div>
   );
 };
