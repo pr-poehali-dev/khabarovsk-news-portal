@@ -4,9 +4,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import VoiceAssistant from '@/components/VoiceAssistant';
+import NotificationSubscribe from '@/components/NotificationSubscribe';
 
 const Index = () => {
   const [activeSection, setActiveSection] = useState('Главная');
+  const [showNotificationDialog, setShowNotificationDialog] = useState(false);
 
   const sections = ['Главная', 'Новости', 'События', 'Погода', 'Происшествия'];
 
@@ -70,6 +72,14 @@ const Index = () => {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              <Button
+                onClick={() => setShowNotificationDialog(true)}
+                variant="outline"
+                className="bg-white/10 text-white border-white/30 hover:bg-white/20 hidden md:flex"
+              >
+                <Icon name="Bell" size={18} className="mr-2" />
+                Подписаться
+              </Button>
               <div className="text-right">
                 <div className="text-2xl font-bold">+22°C</div>
                 <div className="text-xs text-gray-200">Солнечно</div>
@@ -257,7 +267,12 @@ const Index = () => {
             <div>
               <h4 className="font-montserrat font-bold text-lg mb-3">Подписка</h4>
               <p className="text-sm text-gray-300 mb-2">Получайте последние новости</p>
-              <Button variant="outline" className="bg-white text-secondary hover:bg-gray-100">
+              <Button 
+                onClick={() => setShowNotificationDialog(true)}
+                variant="outline" 
+                className="bg-white text-secondary hover:bg-gray-100"
+              >
+                <Icon name="Bell" size={16} className="mr-2" />
                 Подписаться
               </Button>
             </div>
@@ -269,6 +284,10 @@ const Index = () => {
       </footer>
 
       <VoiceAssistant onSectionChange={setActiveSection} />
+      <NotificationSubscribe 
+        isOpen={showNotificationDialog} 
+        onClose={() => setShowNotificationDialog(false)} 
+      />
     </div>
   );
 };
